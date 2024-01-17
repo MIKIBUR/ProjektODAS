@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Note</title>
+</head>
+<body>
+    <h1>Create a New Note</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'success' %}
+                    <p style="color:green">{{ message }}</p>
+                {% elif category == 'danger' %}
+                    <p style="color:red">{{ message }}</p>
+                {% else %}
+                    <p>{{ message }}</p>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('main.new_note') }}">
+        {{ form.csrf_token }}
+
+        <label for="content">Note Content:</label>
+        {{ form.content }}
+
+        <label for="encrypted">Encrypted:</label>
+        {{ form.encrypted }}
+
+        <label for="password">Note password:</label>
+        {{ form.password }}
+
+        <label for="public">Should be public:</label>
+        {{ form.public }}
+        
+        <button type="submit">Save Note</button>
+    </form>
+    <br>
+    <h2>aviable html markups</h2>
+    <p>
+    # Bold: &lt;strong>text&lt;/strong>
+    <br>
+    # Italic: &lt;i>text&lt;/i>
+    <br>
+    # Header: &lt;h{1-5}> text&lt;/h{1-5}>
+    <br>
+    # Link: &lt;a src="URL">text&lt;/a>
+    <br>
+    # Image: &lt;img alt="alt text" src="image URL">
+    </p>
+    <br>
+    <a href="{{ url_for('main.index') }}">Back to Notes</a>
+</body>
+</html>

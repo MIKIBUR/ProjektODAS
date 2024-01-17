@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decrypted Note</title>
+</head>
+<body>
+    <h1>Decrypted Note</h1>
+
+    <div>
+        <p>{{ note.content | safe }}</p>
+        <p><small>Posted by: {{ user.username }} on {{ note.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</small></p>
+    </div>
+
+    <a href="{{ url_for('main.index') }}">Back to Notes</a>
+</body>
+</html>

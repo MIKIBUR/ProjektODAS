@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+    <h1>Welcome to notes sharing app</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'success' %}
+                    <p style="color:green">{{ message }}</p>
+                {% elif category == 'danger' %}
+                    <p style="color:red">{{ message }}</p>
+                {% else %}
+                    <p>{{ message }}</p>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    {% if current_user.is_authenticated %}
+        <p>Hello, {{ current_user.username }}!</p>
+        <a href="{{ url_for('main.logout') }}">Logout</a>
+    {% else %}
+        <a href="{{ url_for('main.login') }}">Login</a>
+        <a href="{{ url_for('main.register') }}">Register</a>
+    {% endif %}
+    <hr>
+    {% for note, user in notes %}
+    <div>
+        {% if note.encrypted %}
+            <p>Encrypted Content</p>
+            <a href="{{ url_for('main.decrypt_note', note_id=note.id) }}">Decrypt Note</a>
+        {% else %}
+            <p>{{ note.content | safe}}</p>
+        {% endif %}
+        <p><small>Posted by: {{ user.username }} on {{ note.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</small></p>
+    </div>
+    <hr>
+    {% endfor %}
+    {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.new_note') }}">Add a New Note</a>
+    {% endif %}
+</body>
+</html>

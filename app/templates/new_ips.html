@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+    <h1  style="color:red">Someone logged in from other device(s)</h1>
+    <hr>
+    {% for ip in ips %}
+    <div>
+        <p>{{ ip }}</p>
+    </div>
+    <hr>
+    {% endfor %}
+    <a href="{{ url_for('main.index') }}">Back to Notes</a>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'success' %}
+                    <p style="color:green">{{ message }}</p>
+                {% elif category == 'danger' %}
+                    <p style="color:red">{{ message }}</p>
+                {% else %}
+                    <p>{{ message }}</p>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <form method="post" action="{{ url_for('main.login') }}">
+        {{ form.csrf_token }}
+        {{ form.hidden_tag() }}
+        <label for="email">Email:</label>
+        {{ form.email }}
+        <br>
+        <label for="password">Password:</label>
+        {{ form.password }}
+        <br>
+        <input type="submit" value="Login">
+    </form>
+    <p>Don't have an account? <a href="{{ url_for('main.register') }}">Register</a></p>
+</body>
+</html>
