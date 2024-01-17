@@ -51,9 +51,9 @@ def register():
             return redirect(url_for('main.login'))
         except ValueError as e:
             flash(str(e), 'danger')
-        else:
-            if form.errors.items():
-                flash('Account creation failed, check your inputs and try again.', 'danger')
+    else:
+        if form.errors.items():
+            flash('Account creation failed, check your inputs and try again.', 'danger')
 
     return render_template('register.html', form=form)
 
@@ -66,6 +66,7 @@ def login():
     if client is None:
         client = Client(ip=request.remote_addr, failed_login_requests=0, last_request_date=datetime.utcnow())
         db.session.add(client)
+        db.session.commit()
 
     delay_seconds = 1
     form = LoginForm()

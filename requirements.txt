@@ -8,6 +8,5 @@ WTForms
 bleach
 cryptography
 flask-talisman
-Flask-Dance
-django_otp
 Flask-Mail
+email_validator
