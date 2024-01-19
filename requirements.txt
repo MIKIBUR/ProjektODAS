@@ -10,3 +10,4 @@ cryptography
 flask-talisman
 Flask-Mail
 email_validator
+pyotp

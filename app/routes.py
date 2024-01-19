@@ -4,8 +4,7 @@ import app
 from flask import Blueprint, render_template
 from app import db, login_manager
 from app.models import User, Note, Client, UserIP
-from app.forms import RegistrationForm, LoginForm, NoteForm, PasswordForm
-import re
+from app.forms import RegistrationForm, LoginForm, NoteForm, PasswordForm, OTPForm
 from bleach import clean
 from sqlalchemy import or_
 from cryptography.fernet import Fernet
@@ -13,6 +12,12 @@ import hashlib
 import base64
 import time
 from datetime import datetime
+import pyotp
+from flask import session
+import sys
+
+# Create a TOTP (Time-based One-Time Password) instance
+totp = pyotp.TOTP(pyotp.random_base32(), interval=60)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -22,6 +27,7 @@ bp = Blueprint('main', __name__)
 
 @bp.route('/')
 def index():
+    session['two_step_authenticated'] = False
     if current_user.is_authenticated:
         user_notes = db.session.query(Note, User).filter(or_(Note.user_id == current_user.id, Note.public == True)).join(User).all()
     else:
@@ -79,8 +85,12 @@ def login():
         if form.validate_on_submit():
             user = User.query.filter_by(email=form.email.data).first()
             if user and user.check_password(form.password.data):
-                login_user(user, remember=form.remember.data)
-
+                # login_user(user)
+                session['two_step_authenticated'] = True
+                # o3 = generate_otp(totp)
+                # sys.stdout.write("o3")
+                # sys.stdout.flush()
+                return redirect(url_for('main.provide_otp'))
                 login_ip = request.remote_addr
                 associated_ips = [ip.ip_address for ip in user.ips if ip.is_associated]
                 not_associated_ips = [ip.ip_address for ip in user.ips if not ip.is_associated]
@@ -105,6 +115,39 @@ def login():
                 flash('Login unsuccessful. Please check email and password.', 'danger')
                 time.sleep(delay_seconds)
     return render_template('login.html', form=form)
+
+@bp.route('/provide-otp', methods=['GET', 'POST'])
+def provide_otp():
+    # o1 = generate_otp(totp)
+    # sys.stdout.write("token 1")
+    o2 = generate_otp(totp)
+    sys.stdout.write("o2")
+    # sys.stdout.flush()
+    if 'two_step_authenticated' not in session or not session['two_step_authenticated']:
+        return redirect(url_for('main.index'))
+
+    form = OTPForm()
+
+
+
+    if form.validate_on_submit():
+        user_entered_otp = form.otp.data
+        generated_otp = generate_otp(totp)
+
+        # Validate the entered OTP
+        if user_entered_otp == generated_otp:  # Replace 'generated_otp' with the actual OTP
+            # Clear the session variable
+            session.pop('two_step_authenticated', None)
+
+            # Log the user in
+            login_user(current_user)
+
+            flash('Logged in!', 'success')
+            return redirect(url_for('main.index'))
+
+        flash('Invalid OTP. Please try again.', 'danger')
+
+    return render_template('provide_otp.html', form=form)
 
 @bp.route('/logout')
 @login_required
@@ -166,3 +209,12 @@ def sanitize_content(content):
     cleaned_content = clean(content, tags=allowed_tags, attributes=allowed_attributes)
     return cleaned_content
 
+def generate_otp(totp):
+
+    # Generate and print the OTP
+    otp = totp.now()
+    print(f"Generated OTP: {otp}")
+    sys.stdout.write("token: "+otp)
+    sys.stdout.flush()
+
+    return otp
