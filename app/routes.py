@@ -85,26 +85,10 @@ def login():
         if form.validate_on_submit():
             user = User.query.filter_by(email=form.email.data).first()
             if user and user.check_password(form.password.data):
-                # login_user(user)
                 session['two_step_authenticated'] = True
-                # o3 = generate_otp(totp)
-                # sys.stdout.write("o3")
-                # sys.stdout.flush()
+                session['user_email'] = form.email.data
                 return redirect(url_for('main.provide_otp'))
-                login_ip = request.remote_addr
-                associated_ips = [ip.ip_address for ip in user.ips if ip.is_associated]
-                not_associated_ips = [ip.ip_address for ip in user.ips if not ip.is_associated]
-
-                if login_ip not in associated_ips:
-                    new_user_ip = UserIP(ip_address=login_ip, user=user, is_associated=False)
-                    db.session.add(new_user_ip)
-                elif not not_associated_ips is None:
-                    flash('There were new devices that logged into your account', 'danger')
-                    return render_template('new_ips.html', ips=not_associated_ips)
-
-                flash('Logged in!', 'success')
-                client.failed_login_requests = 0
-                return redirect(url_for('main.index'))
+                
             else:
                 flash('Login unsuccessful. Please check email and password.', 'danger')
                 time.sleep(delay_seconds)
@@ -138,9 +122,24 @@ def provide_otp():
         if user_entered_otp == generated_otp:  # Replace 'generated_otp' with the actual OTP
             # Clear the session variable
             session.pop('two_step_authenticated', None)
-
+            user_email = session.get('user_email', None)
+            user = User.query.filter_by(email=user_email).first()
+            client = Client.query.filter_by(ip=request.remote_addr).first()
             # Log the user in
-            login_user(current_user)
+            login_user(user)
+            client.failed_login_requests = 0
+            db.session.commit()
+            login_ip = request.remote_addr
+            associated_ips = [ip.ip_address for ip in user.ips if ip.is_associated]
+            not_associated_ips = [ip.ip_address for ip in user.ips if not ip.is_associated]
+
+            if login_ip not in associated_ips:
+                new_user_ip = UserIP(ip_address=login_ip, user=user, is_associated=False)
+                db.session.add(new_user_ip)
+                db.session.commit()
+            elif not not_associated_ips is None:
+                flash('There were new devices that logged into your account', 'danger')
+                return render_template('new_ips.html', ips=not_associated_ips)
 
             flash('Logged in!', 'success')
             return redirect(url_for('main.index'))
